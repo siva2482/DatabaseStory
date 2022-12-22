@@ -25,3 +25,11 @@ Feature: Testing the database
   When user selects the dropdown
   Then takes data from the database
   And assetts it with dropdowwn  
+  
+  When user select the department from cities
+  Then user takes data from database
+  And assertit with the table
+  
+  When user select employee with thrird largest salary
+  Then user takes employee from database
+  And assert it with the web table
