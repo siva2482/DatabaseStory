@@ -1,6 +1,7 @@
 package StepDef;
 
 import java.sql.Connection;
+
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,7 +19,7 @@ public class hooks {
 	
 	public static WebDriver driver;
 	public static String url;
-	static Connection conn = null;
+	static Connection conn ;
     static Statement stmt = null;
     static ResultSet resultSet = null;
 	@Before(order=0)
@@ -30,20 +31,21 @@ public class hooks {
 	System.out.println("Test Started");
 	Class.forName("com.mysql.jdbc.Driver");
 
-    // Open a connection
-    conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/hr","root", "Ranjani1234$@@@");
+   // Open a connection
+   conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/hr","root", "Ranjani1234$@@@");
 	
+    
+	
+	}
+	public static Connection getConnection() throws SQLException
+	{
+		return conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/hr","root", "Ranjani1234$@@@");
 	}
 	@After
 	public void aftertest() throws SQLException
 	{
-		try
-		{
 		conn.close();
-		}catch(Exception e)
-		{
-			System.out.println(e);
-		}
+		//driver.quit();
 		
 	}
 

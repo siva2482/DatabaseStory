@@ -1,6 +1,7 @@
 package StepDef;
 
 import java.sql.Connection;
+
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -22,6 +23,8 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.github.bonigarcia.wdm.WebDriverManager;
+import junit.framework.Assert;
+import junit.framework.AssertionFailedError;
 
 public class verifyclass {
 	
@@ -39,27 +42,31 @@ public class verifyclass {
 	Connection conn = null;
     Statement stmt =null;
     ResultSet resultSet = null;
-	public verifyclass()
+   
+	public verifyclass() throws SQLException, ClassNotFoundException
 	{
 		driver=hooks.driver;
-	conn=hooks.conn;
+		conn=hooks.conn;
+		
 	}
     int rowcount;
      int colcount;
 
 @Given("user navigates to the url")
-public void user_navigates_to_the_url() {
+public void user_navigates_to_the_url() throws ClassNotFoundException, SQLException {
     // Write code here that turns the phrase above into concrete actions
 	 
      driver.get("http://databasetesting.s3-website-us-west-2.amazonaws.com/");
+     
      driver.manage().window().maximize();
      driver.manage().timeouts().implicitlyWait(20,TimeUnit.SECONDS);
     
 }
 
 @When("user selects the dropdown")
-public void user_selects_the_dropdown() {
+public void user_selects_the_dropdown() throws SQLException, ClassNotFoundException {
     // Write code here that turns the phrase above into concrete actions
+	
    department_list=driver.findElements(By.xpath("//option"));
    
    for(int i=0;i<department_list.size();i++)
@@ -78,10 +85,11 @@ public void takes_data_from_the_database() throws ClassNotFoundException, SQLExc
     // Write code here that turns the phrase above into concrete actions
 	// Register JDBC driver (JDBC driver name and Database URL)
    
-	
-	 
+	Class.forName("com.mysql.jdbc.Driver");
+	conn=DriverManager.getConnection("jdbc:mysql://localhost:3306/hr","root", "Ranjani1234$@@@");
+	//conn=hooks.getConnection();
         // Execute a query
-        stmt = conn.createStatement();
+        stmt =conn.createStatement();
         resultSet = stmt.executeQuery("select department_name from hr.departments where location_id not in (select location_id from hr.locations where country_id='US');");
         ResultSetMetaData rsMetaData = resultSet.getMetaData();
          colcount = rsMetaData.getColumnCount();
@@ -110,14 +118,22 @@ public void takes_data_from_the_database() throws ClassNotFoundException, SQLExc
 @Then("assetts it with dropdowwn")
 public void assetts_it_with_dropdowwn() throws SQLException {
     // Write code here that turns the phrase above into concrete actions
-    if(Department_name.size()==Database_Department_name.size())
+   /* if(Department_name.size()==Database_Department_name.size())
     {
     	if(Department_name.equals(Database_Department_name))
     		System.out.println("Data is correctly populated from hrschema");
     	
     }
     else
-    	System.out.println("Data not correctly populated from hrschema");
+    	System.out.println("Data not correctly populated from hrschema");*/
+	try
+	{
+    Assert.assertEquals(Department_name.size(), Database_Department_name.size());
+	}catch(AssertionFailedError e)
+	{
+		System.out.println("webtable Data unmatched with databse data ");
+		
+	}
     
 }
 @When("user select the department from cities")
@@ -137,8 +153,11 @@ public void user_select_the_department_from_cities() throws SQLException {
 }
 
 @Then("user takes data from database")
-public void user_takes_data_from_database() throws SQLException {
+public void user_takes_data_from_database() throws SQLException, ClassNotFoundException {
     // Write code here that turns the phrase above into concrete actions
+	Class.forName("com.mysql.jdbc.Driver");
+	conn=DriverManager.getConnection("jdbc:mysql://localhost:3306/hr","root", "Ranjani1234$@@@");
+	//conn=hooks.getConnection();
 	stmt = conn.createStatement();
     resultSet = stmt.executeQuery("select count(d.department_name),l.city from hr.departments d join hr.locations l using(location_id) group by l.city;");
     ResultSetMetaData rsMetaData = resultSet.getMetaData();
@@ -157,7 +176,8 @@ public void user_takes_data_from_database() throws SQLException {
      rowcount++;
      }
      Collections.sort(lcount);
-    System.out.print(lcount); 
+    System.out.print(lcount);
+    
         
      //System.out.println(resultSet.getString(1));
      //System.out.println(resultSet.getString(2));
@@ -171,11 +191,13 @@ public void user_takes_data_from_database() throws SQLException {
 @Then("assertit with the table")
 public void assertit_with_the_table() {
     // Write code here that turns the phrase above into concrete actions
-	if(lcity.equals(lcount))
+	try
 	{
+Assert.assertTrue(lcity.equals(lcount));
+	
 		System.out.println("Cities are same in both table and database");
-	}
-	else
+	
+	}catch(AssertionFailedError e)
 	{
 		for(int i=0;i<lcount.size();i++)
 		{
@@ -204,6 +226,7 @@ public void user_select_employee_with_thrird_largest_salary() {
 @Then("user takes employee from database")
 public void user_takes_employee_from_database() throws SQLException {
     // Write code here that turns the phrase above into concrete actions
+	conn=hooks.getConnection();
 	stmt = conn.createStatement();
     resultSet = stmt.executeQuery("Select   Employee_id,concat(First_name,\" \" ,Last_name ) as Name, round(salary,0) as salary from hr.employees where salary = (select salary from  (select distinct salary from hr.employees order by  salary desc limit 3) x order by salary limit 1);");
     ResultSetMetaData rsMetaData = resultSet.getMetaData();
@@ -221,22 +244,24 @@ public void user_takes_employee_from_database() throws SQLException {
 }
 
 @Then("assert it with the web table")
-public void assert_it_with_the_web_table() {
+public void assert_it_with_the_web_table() throws SQLException {
 	int count=0;
 
     // Write code here that turns the phrase above into concrete actions
+
+	
 	for(int i=0;i<employee_table.size();i++)
 	{
- if(employee_table.contains(database_employee.get(i))) 
+ if(employee_table.contains(database_employee.get(i))) ;
  
 	  count++;
  //System.out.println(count);
 	 
 }
-	if(count==colcount)
+	Assert.assertEquals(count,colcount);
 		System.out.println("Emplyee data verified");
 
-
+//conn.close();
 }
-
+ 
 }
